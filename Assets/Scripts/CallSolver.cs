@@ -6,13 +6,13 @@ using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Text;
+using UnityEngine.Events;
 
 //call the solver.
 //note that no attempt is made (yet?) to catch any solver issues.
-
 public class CallSolver : MonoBehaviour
 {
-    public string[] generated_plan;
+    public static string[] generated_plan; // stores the plan
 
     [System.Serializable]
     class Actions
@@ -58,9 +58,9 @@ public class CallSolver : MonoBehaviour
 
     private async Task Solve()
     {
-        StreamReader reader = new StreamReader("Assets/Scripts/domain.pddl");
+        StreamReader reader = new StreamReader("Assets/PDDL Files/domain.pddl");
         string domain = reader.ReadToEnd();
-        reader = new StreamReader("Assets/Scripts/updatedProblem.pddl");
+        reader = new StreamReader("Assets/PDDL Files/updatedProblem.pddl");
         string problem = reader.ReadToEnd();
         PDDLData pddlData = new PDDLData(domain, problem);
         var url = "http://solver.planning.domains/solve";
@@ -77,6 +77,7 @@ public class CallSolver : MonoBehaviour
             var name = converted.plan[i].name;
             generated_plan[i] = name.Substring(1, name.Length - 2);
         }
+        GameManager.planReceived.Invoke();
     }
 
     // Start is called before the first frame update

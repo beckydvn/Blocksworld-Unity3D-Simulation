@@ -238,7 +238,7 @@ MonoBehaviour:
   onValueChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_IsOn: 0
+  m_IsOn: 1
 --- !u!222 &5075044019910481035
 CanvasRenderer:
   m_ObjectHideFlags: 0

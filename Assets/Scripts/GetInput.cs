@@ -10,7 +10,7 @@ public class GetInput : MonoBehaviour
     public GameObject submitButton;
     public GameObject banner; // to get/change the banner text
     public GameObject canvas; // to delete the canvas when finished
-    public GameObject solver; // solver to instantiate
+    //public GameObject solver; // solver to instantiate
 
     private TMPro.TextMeshProUGUI bannerText;
     private string goalText = "set goal";
@@ -31,14 +31,14 @@ public class GetInput : MonoBehaviour
 
     private void WriteToFile(string newData)
     {
-        writer = new StreamWriter("Assets/Scripts/updatedProblem.pddl", false);
+        writer = new StreamWriter("Assets/PDDL Files/updatedProblem.pddl", false);
         writer.Write(newData);
         writer.Close();
     }
 
     private List<string> SplitFile()
     {
-        reader = new StreamReader("Assets/Scripts/problem.pddl");
+        reader = new StreamReader("Assets/PDDL Files/problem.pddl");
         string initialProb = reader.ReadToEnd();
         reader.Close();
         initialProbSplit = initialProb.Split(new string[] { initDelim }, System.StringSplitOptions.None).ToList();
@@ -70,7 +70,12 @@ public class GetInput : MonoBehaviour
             // write to the file
             WriteToFile(string.Join(" ", initialProbSplit));
             Destroy(canvas);
-            Instantiate(solver);
+
+
+            // TODO: instead of instantiating this here trigger an event in the game manager to do it there
+            //Instantiate(solver);
+            GameManager.inputReceived.Invoke();
+
         }
         bannerText.text = goalText;
     }

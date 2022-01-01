@@ -7,16 +7,18 @@ TagManager:
   - Dropdown
   - Handempty
   - Clear
-  - Red
-  - Orange
-  - Yellow
-  - Cyan
-  - Green
-  - Blue
-  - Purple
-  - Pink
-  - White
-  - Black
+  - red
+  - orange
+  - yellow
+  - green
+  - cyan
+  - blue
+  - purple
+  - pink
+  - white
+  - black
+  - Get Input
+  - Submit
   layers:
   - Default
   - TransparentFX
