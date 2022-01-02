@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.UI;
 
 public class ExecutePlan : MonoBehaviour
 {
@@ -80,8 +81,15 @@ public class ExecutePlan : MonoBehaviour
                 //wait 5 seconds
                 StartCoroutine(Reset());
             }
+            else
+            {
+                //trigger an event to spawn button in the gamemanager
+                GameManager.allSolved.Invoke();
+            }
         }
     }
+
+
 
     /*
      * iterate through the plan

@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
@@ -10,14 +11,17 @@ public class GameManager : MonoBehaviour
     public GameObject executePlan;
     public GameObject canvas; // to delete the canvas when finished
     public GameObject stateCanvas;
+    public GameObject redoButton;
     public static UnityEvent inputReceived;
     public static UnityEvent plansReceived;
     public static UnityEvent noPlan;
+    public static UnityEvent allSolved;
     private GameObject instantiatedSolver;
     private GameObject instantiatedCanvas;
     private GameObject instantiatedGetInput;
     private GameObject instantiatedExecutePlan;
     private GameObject instantiatedStateCanvas;
+    private GameObject instantiateRedoButton;
 
     // Start is called before the first frame update
     void Start()
@@ -25,9 +29,11 @@ public class GameManager : MonoBehaviour
         inputReceived = new UnityEvent();
         plansReceived = new UnityEvent();
         noPlan = new UnityEvent();
+        allSolved = new UnityEvent();
         inputReceived.AddListener(CallSolver);
         plansReceived.AddListener(CallExecutePlan);
         noPlan.AddListener(GetInputAgain);
+        allSolved.AddListener(TryAgain);
         instantiatedCanvas = Instantiate(canvas);
         instantiatedGetInput = Instantiate(getInput);
     }
@@ -51,8 +57,20 @@ public class GameManager : MonoBehaviour
     void GetInputAgain()
     {
         GameObject.FindGameObjectWithTag("Initial State Label").GetComponent<TMPro.TextMeshProUGUI>().text = "set initial state";
-        Debug.Log("Getting input again...");
         Destroy(instantiatedSolver);
+    }
+    void TryAgain()
+    {
+        instantiateRedoButton = Instantiate(redoButton);
+        Button btn = GameObject.FindGameObjectWithTag("Redo").GetComponent<Button>();
+        btn.onClick.AddListener(TaskOnClick);
+    }
+    void TaskOnClick()
+    {
+        Destroy(instantiateRedoButton);
+        instantiatedCanvas = Instantiate(canvas);
+        instantiatedGetInput = Instantiate(getInput);
+        GetInputAgain();
     }
 }
  

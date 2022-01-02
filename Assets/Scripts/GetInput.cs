@@ -21,6 +21,12 @@ public class GetInput : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        //always write to the initial file first in case of corruption
+        reader = new StreamReader("Assets/PDDL Files/sampleProblem.pddl");
+        string data = reader.ReadToEnd();
+        reader.Close();
+        WriteToFile(data, "Assets/PDDL Files/sampleProblem.pddl");
+
         Button btn = GameObject.FindGameObjectWithTag("Submit").GetComponent<Button>();
         bannerText = GameObject.FindGameObjectWithTag("Initial State Label").GetComponent<TMPro.TextMeshProUGUI>();
         btn.onClick.AddListener(TaskOnClick);  

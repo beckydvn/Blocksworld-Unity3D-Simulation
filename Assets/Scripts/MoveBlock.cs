@@ -11,12 +11,16 @@ public class MoveBlock : MonoBehaviour
     public static PutDownEvent putDownEvent;
     public float speed;
     private bool stacking = false;
-    private bool unstacking = false;
+    //private bool unstacking = false;
     private bool pickingUp = false;
-    private bool puttingDown = false;
+    private bool falling = false;
     private GameObject bottomBlock;
     private GameObject topBlock;
     private float blockHeight;
+    private bool moveRight;
+    private Rigidbody topRigidBody; 
+    private Rigidbody bottomRigidBody;
+
 
     public class StackEvent : UnityEvent<string, string>
     {
@@ -45,20 +49,33 @@ public class MoveBlock : MonoBehaviour
     private void StackBlock(string top, string bottom)
     {
         Debug.Log("stacking " + top + " on " + bottom);
-        ExecutePlan.actionFinished.Invoke();
+        stacking = true;
+        topBlock = GameObject.FindGameObjectWithTag(top);
+        bottomBlock = GameObject.FindGameObjectWithTag(bottom);
+        bottomRigidBody = bottomBlock.GetComponent<Rigidbody>();
+
+        moveRight = false;
+        if (topBlock.transform.position.x < bottomBlock.transform.position.x)
+        {
+            moveRight = true;
+        }
     }
 
     private void UnstackBlock(string top, string bottom)
     {
         Debug.Log("unstacking " + top + " from " + bottom);
-        ExecutePlan.actionFinished.Invoke();
+        topBlock = GameObject.FindGameObjectWithTag(top);
+        PickUpBlock(top);
+        
     }
     private void PickUpBlock(string block)
     {
         Debug.Log("picking up " + block);
         pickingUp = true;
-        bottomBlock = GameObject.FindGameObjectWithTag(block);
-        blockHeight = bottomBlock.GetComponent<MeshCollider>().bounds.extents.y;
+        topBlock = GameObject.FindGameObjectWithTag(block);
+        blockHeight = topBlock.GetComponent<MeshCollider>().bounds.extents.y;
+        topRigidBody = topBlock.GetComponent<Rigidbody>();
+        topRigidBody.useGravity = false;
     }
 
     private void PutDownBlock(string block)
@@ -71,14 +88,55 @@ public class MoveBlock : MonoBehaviour
     {
         if(pickingUp)
         {
-            if (bottomBlock.transform.position.y < blockHeight * 10)
+            if (topBlock.transform.position.y < blockHeight * 10)
             {
-                bottomBlock.transform.Translate(Vector3.up * speed * Time.deltaTime);
+                topBlock.transform.Translate(Vector3.up * speed * Time.deltaTime);
             }
             else
             {
                 pickingUp = false;
                 ExecutePlan.actionFinished.Invoke();
+            }
+
+        }
+        else if(stacking)
+        {
+            if(!falling)
+            {
+                if (moveRight)
+                {
+                    if (topBlock.transform.position.x < bottomBlock.transform.position.x)
+                    {
+                        topBlock.transform.Translate(Vector3.right * speed * Time.deltaTime);
+                    }
+                    else
+                    {
+                        falling = true;
+                        topRigidBody.useGravity = true;
+                    }
+                }
+                else
+                {
+                    if (topBlock.transform.position.x > bottomBlock.transform.position.x)
+                    {
+                        topBlock.transform.Translate(Vector3.right * speed * Time.deltaTime * -1);
+                    }
+                    else
+                    {
+                        falling = true;
+                        topRigidBody.useGravity = true;
+                    }
+                }
+            }
+            else
+            {
+                //if colliding with bottom block
+                if (topBlock.transform.position.y <= bottomBlock.transform.position.y + 2)
+                {
+                    falling = false;
+                    stacking = false;
+                    ExecutePlan.actionFinished.Invoke();
+                }
             }
         }
     }
