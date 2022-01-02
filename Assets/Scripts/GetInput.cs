@@ -7,49 +7,49 @@ using UnityEngine.UI;
 
 public class GetInput : MonoBehaviour
 {
-    public GameObject submitButton;
-    public GameObject banner; // to get/change the banner text
-    public GameObject canvas; // to delete the canvas when finished
-    //public GameObject solver; // solver to instantiate
-
     private TMPro.TextMeshProUGUI bannerText;
     private string goalText = "set goal";
     private StreamWriter writer;
     private StreamReader reader;
     private string initDelim = "(:INIT ";
     private string goalDelim = "(:goal ";
+    private string andDelim = "(AND ";
     private List<string> initialProbSplit;
+    private List<string> fullProbSplit;
+    public static bool basicStart = false;
 
     // Start is called before the first frame update
     void Start()
     {
-        Button btn = submitButton.GetComponent<Button>();
-        bannerText = banner.GetComponent<TMPro.TextMeshProUGUI>();
-        initialProbSplit = SplitFile();
-        btn.onClick.AddListener(TaskOnClick);
+        Button btn = GameObject.FindGameObjectWithTag("Submit").GetComponent<Button>();
+        bannerText = GameObject.FindGameObjectWithTag("Initial State Label").GetComponent<TMPro.TextMeshProUGUI>();
+        btn.onClick.AddListener(TaskOnClick);  
+        initialProbSplit = SplitFile("Assets/PDDL Files/initialProblem.pddl");
+        fullProbSplit = initialProbSplit.ToList();
     }
 
-    private void WriteToFile(string newData)
+    private void WriteToFile(string newData, string path)
     {
-        writer = new StreamWriter("Assets/PDDL Files/updatedProblem.pddl", false);
+        writer = new StreamWriter(path, false);
         writer.Write(newData);
         writer.Close();
     }
 
-    private List<string> SplitFile()
+    private List<string> SplitFile(string path)
     {
-        reader = new StreamReader("Assets/PDDL Files/problem.pddl");
+        List<string> probSplit;
+        reader = new StreamReader(path);
         string initialProb = reader.ReadToEnd();
         reader.Close();
-        initialProbSplit = initialProb.Split(new string[] { initDelim }, System.StringSplitOptions.None).ToList();
-        foreach (var element in initialProbSplit[1].Split(new string[] { goalDelim }, System.StringSplitOptions.None).ToList())
+        probSplit = initialProb.Split(new string[] { initDelim }, System.StringSplitOptions.None).ToList();
+        foreach (var element in probSplit[1].Split(new string[] { goalDelim }, System.StringSplitOptions.None).ToList())
         {
-            initialProbSplit.Add(element);
+            probSplit.Add(element);
         }
         // remove the duplicate
-        initialProbSplit.RemoveAt(1);
+        probSplit.RemoveAt(1);
 
-        return initialProbSplit;
+        return probSplit.ToList();
     }
 
     private void UpdateProblemFile(string resultStr)
@@ -58,22 +58,26 @@ public class GetInput : MonoBehaviour
         if (bannerText.text != goalText)
         {
             // set up the new string (at 1 will be the new initial state, at 2 will be the goal)
-            initialProbSplit[1] = "\n" +initDelim + resultStr + ")";
-            // write to the file
-            WriteToFile(string.Join(" ", initialProbSplit));
+            fullProbSplit[1] = "\n" + initDelim + resultStr + ")";
+            // check if initial start is the same as the basic one
+            if(initialProbSplit[1].Trim("\n ".ToCharArray()).Contains(resultStr.Trim("\n ".ToCharArray())))
+            {
+                basicStart = true;
+            }
+            initialProbSplit[1] = "\n" + initDelim + initialProbSplit[1];
+            initialProbSplit[2] = "\n" + goalDelim + andDelim + resultStr + ")))";
         }
         // overwrite the goal
         else
         {
-            // set up the new string (at 1 will be the new initial state, at 2 will be the goal)
-            initialProbSplit[2] = "\n" + goalDelim + "(AND " + resultStr + ")))";
-            // write to the file
-            WriteToFile(string.Join(" ", initialProbSplit));
-            Destroy(canvas);
+            // set up the new strings (at 1 will be the new initial state, at 2 will be the goal)
+            
+            fullProbSplit[2] = "\n" + goalDelim + andDelim + resultStr + ")))";
+            // write to the files
+            WriteToFile(string.Join(" ", initialProbSplit), "Assets/PDDL Files/initialProblem.pddl");
+            WriteToFile(string.Join(" ", fullProbSplit), "Assets/PDDL Files/fullProblem.pddl");
 
-
-            // TODO: instead of instantiating this here trigger an event in the game manager to do it there
-            //Instantiate(solver);
+            // instead of instantiating this here trigger an event in the game manager to do it there
             GameManager.inputReceived.Invoke();
 
         }
@@ -106,11 +110,7 @@ public class GetInput : MonoBehaviour
     private void TaskOnClick()
     {
         string dropDownResults = ConvertUIToString(GameObject.FindGameObjectsWithTag("Dropdown"), false);
-
-        // TODO: CONVERT TO STRING BUT ONLY ADD TO STRING IF CHECKBOX CHECKED 
         string clearResults = ConvertUIToString(GameObject.FindGameObjectsWithTag("Clear"), true);
-
-        // TODO: CHECK HANDEMPTY
         string handemptyResult = ConvertUIToString(GameObject.FindGameObjectsWithTag("Handempty"), true);
 
         // update the problem file with the changes

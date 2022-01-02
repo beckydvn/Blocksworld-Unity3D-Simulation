@@ -12,7 +12,10 @@ using UnityEngine.Events;
 //note that no attempt is made (yet?) to catch any solver issues.
 public class CallSolver : MonoBehaviour
 {
-    public static string[] generated_plan; // stores the plan
+    public static string[] initialPlan; // stores the plan from start to initial state
+    public static string[] fullPlan; // stores the plan from initial state to goal
+    private string domain;
+    private string problem;
 
     [System.Serializable]
     class Actions
@@ -37,6 +40,7 @@ public class CallSolver : MonoBehaviour
     [System.Serializable]
     class FullResponse
     {
+        public string status;
         public Result result;
         public static FullResponse CreateFromJSON(string jsonString)
         {
@@ -56,12 +60,8 @@ public class CallSolver : MonoBehaviour
         }
     }
 
-    private async Task Solve()
+    private async Task<string[]> Solve(string domain, string problem, string[] plan)
     {
-        StreamReader reader = new StreamReader("Assets/PDDL Files/domain.pddl");
-        string domain = reader.ReadToEnd();
-        reader = new StreamReader("Assets/PDDL Files/updatedProblem.pddl");
-        string problem = reader.ReadToEnd();
         PDDLData pddlData = new PDDLData(domain, problem);
         var url = "http://solver.planning.domains/solve";
         var client = new HttpClient();
@@ -71,19 +71,45 @@ public class CallSolver : MonoBehaviour
         var result = response.Content.ReadAsStringAsync().Result;
         Debug.Log(result);
         Result converted = FullResponse.CreateFromJSON(result).result;
-        generated_plan = new string[converted.plan.Length];
-        for(int i = 0; i < generated_plan.Length; i++)
+
+        plan = new string[converted.plan.Length];
+        for (int i = 0; i < plan.Length; i++)
         {
             var name = converted.plan[i].name;
-            generated_plan[i] = name.Substring(1, name.Length - 2);
+            plan[i] = name.Substring(1, name.Length - 2);
         }
-        GameManager.planReceived.Invoke();
+        return plan;
     }
 
     // Start is called before the first frame update
     async void Start()
     {
-        await Solve();
+        StreamReader reader = new StreamReader("Assets/PDDL Files/domain.pddl");
+        domain = reader.ReadToEnd();
+
+        try
+        {
+            if (!GetInput.basicStart)
+            {
+                reader = new StreamReader("Assets/PDDL Files/initialProblem.pddl");
+                problem = reader.ReadToEnd();
+                initialPlan = await Solve(domain, problem, initialPlan);
+            }
+            reader = new StreamReader("Assets/PDDL Files/fullProblem.pddl");
+            problem = reader.ReadToEnd();
+            fullPlan = await Solve(domain, problem, fullPlan);
+
+            GameManager.plansReceived.Invoke();
+        }
+        catch (System.NullReferenceException)
+        {
+            Debug.Log("Solver was not able to generate a plan.");
+            GameManager.noPlan.Invoke();
+        }
+        finally
+        {
+            reader.Close();
+        }
     }
 }
 

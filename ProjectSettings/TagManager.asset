@@ -19,6 +19,9 @@ TagManager:
   - black
   - Get Input
   - Submit
+  - Initial State Label
+  - State of Solving Label
+  - Redo
   layers:
   - Default
   - TransparentFX
