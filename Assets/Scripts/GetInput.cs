@@ -16,7 +16,9 @@ public class GetInput : MonoBehaviour
     private string andDelim = "(AND ";
     private List<string> initialProbSplit;
     private List<string> fullProbSplit;
+    private string baseInitialState;
     public static bool basicStart = false;
+    public static Button btn;
 
     // Start is called before the first frame update
     void Start()
@@ -26,10 +28,11 @@ public class GetInput : MonoBehaviour
         string data = reader.ReadToEnd();
         WriteToFile(data, "Assets/PDDL Files/initialProblem.pddl");
 
-        Button btn = GameObject.FindGameObjectWithTag("Submit").GetComponent<Button>();
+        btn = GameObject.FindGameObjectWithTag("Submit").GetComponent<Button>();
         bannerText = GameObject.FindGameObjectWithTag("Initial State Label").GetComponent<TMPro.TextMeshProUGUI>();
         btn.onClick.AddListener(TaskOnClick);  
         initialProbSplit = SplitFile("Assets/PDDL Files/initialProblem.pddl");
+        baseInitialState = initialProbSplit[1];
         fullProbSplit = initialProbSplit.ToList();
     }
 
@@ -70,7 +73,7 @@ public class GetInput : MonoBehaviour
             {
                 basicStart = true;
             }
-            initialProbSplit[1] = "\n" + initDelim + initialProbSplit[1];
+            initialProbSplit[1] = "\n" + initDelim + baseInitialState;
             initialProbSplit[2] = "\n" + goalDelim + andDelim + resultStr + ")))";
         }
         // overwrite the goal
@@ -83,9 +86,8 @@ public class GetInput : MonoBehaviour
             WriteToFile(string.Join(" ", initialProbSplit), "Assets/PDDL Files/initialProblem.pddl");
             WriteToFile(string.Join(" ", fullProbSplit), "Assets/PDDL Files/fullProblem.pddl");
 
-            // instead of instantiating this here trigger an event in the game manager to do it there
+            btn.interactable = false;
             GameManager.inputReceived.Invoke();
-
         }
         bannerText.text = goalText;
     }

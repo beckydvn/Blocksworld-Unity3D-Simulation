@@ -103,12 +103,14 @@ public class CallSolver : MonoBehaviour
         catch (System.NullReferenceException)
         {
             Debug.Log("Solver was not able to generate a plan.");
+            GetInput.basicStart = false;
             GameManager.noPlan.Invoke();
         }
         finally
         {
             reader.Close();
         }
+        GetInput.btn.interactable = true;
         reader.Close();
     }
 }

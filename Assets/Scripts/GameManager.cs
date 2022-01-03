@@ -104,6 +104,7 @@ public class GameManager : MonoBehaviour
         Destroy(instantiatedSolver);
         Destroy(instantiateRedoButton);
         Destroy(instantiatedStateCanvas);
+        Destroy(instantiatedExecutePlan);
         instantiatedCanvas = Instantiate(canvas);
         instantiatedGetInput = Instantiate(getInput);
         GameObject.FindGameObjectWithTag("Initial State Label").GetComponent<TMPro.TextMeshProUGUI>().text = "set initial state";

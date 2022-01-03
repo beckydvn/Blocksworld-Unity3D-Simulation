@@ -90,6 +90,8 @@ public class ExecutePlan : MonoBehaviour
             else
             {
                 //trigger an event to spawn button in the gamemanager
+                solvedInitialState = false;
+                GetInput.basicStart = false;
                 GameManager.allSolved.Invoke();
             }
         }
