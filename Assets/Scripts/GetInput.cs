@@ -24,8 +24,7 @@ public class GetInput : MonoBehaviour
         //always write to the initial file first in case of corruption
         reader = new StreamReader("Assets/PDDL Files/sampleProblem.pddl");
         string data = reader.ReadToEnd();
-        reader.Close();
-        WriteToFile(data, "Assets/PDDL Files/sampleProblem.pddl");
+        WriteToFile(data, "Assets/PDDL Files/initialProblem.pddl");
 
         Button btn = GameObject.FindGameObjectWithTag("Submit").GetComponent<Button>();
         bannerText = GameObject.FindGameObjectWithTag("Initial State Label").GetComponent<TMPro.TextMeshProUGUI>();
@@ -36,6 +35,7 @@ public class GetInput : MonoBehaviour
 
     private void WriteToFile(string newData, string path)
     {
+        reader.Close();
         writer = new StreamWriter(path, false);
         writer.Write(newData);
         writer.Close();

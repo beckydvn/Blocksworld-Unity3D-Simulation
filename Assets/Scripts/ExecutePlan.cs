@@ -21,22 +21,28 @@ public class ExecutePlan : MonoBehaviour
         actionFinished.AddListener(TakeActionBuffer);
         if(GetInput.basicStart)
         {
-            solvedInitialState = true;
-            stateText.text = "solving for the goal...";
+            StartCoroutine(FullPlanStart());
         }
         else
         {
-            stateText.text = "shifting to the initial state...";
+            StartCoroutine(InitialPlanStart());
         }
+        
+    }
+
+    IEnumerator InitialPlanStart()
+    {
+        stateText.text = "shifting to the initial state...";
+        yield return new WaitForSeconds(3);
         TakeActionBuffer();
     }
 
-    IEnumerator Reset()
+    IEnumerator FullPlanStart()
     {
+        stateText.text = "now solving for the goal...";
         yield return new WaitForSeconds(3);
         index = 0;
         solvedInitialState = true;
-        stateText.text = "solving for the goal...";
         TakeAction(fullPlan);
     }
 
@@ -79,7 +85,7 @@ public class ExecutePlan : MonoBehaviour
             if(!solvedInitialState)
             {
                 //wait 5 seconds
-                StartCoroutine(Reset());
+                StartCoroutine(FullPlanStart());
             }
             else
             {
@@ -88,21 +94,4 @@ public class ExecutePlan : MonoBehaviour
             }
         }
     }
-
-
-
-    /*
-     * iterate through the plan
-     * "move" script has stack/unstack functions triggered by an event; you can
-     * pass the stacking function 2 strings which correspond to the relevant blocks.
-     * this move script will just be attached to an empty gameobject.
-     * keep track of which index of the plan we are on.
-     * "taking action" happens within a function also triggered by an event - 
-     * first triggered when the solver is done, and only triggered again when the
-     * previous action is finished (stack/unstack functions will invoke it again).
-     * so basically this function and the stack/unstack functions play tag with
-     * each other until the plan is complete.
-    */
-
-
 }

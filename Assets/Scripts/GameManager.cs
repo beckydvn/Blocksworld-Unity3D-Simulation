@@ -22,10 +22,22 @@ public class GameManager : MonoBehaviour
     private GameObject instantiatedExecutePlan;
     private GameObject instantiatedStateCanvas;
     private GameObject instantiateRedoButton;
+    public static Dictionary<string, Vector3> blockPositions = new Dictionary<string, Vector3>();
+    private string[] blockTags = {"red", "orange", "yellow", "green", "cyan", "blue", "purple", "pink", "white", "black"};
+    private Dictionary <string, GameObject> blocks = new Dictionary<string, GameObject>();
+    public static TMPro.TextMeshProUGUI stateText;
+   // public static Vector3 scale = new Vector3(1.25f, 1, 1);
 
     // Start is called before the first frame update
     void Start()
     {
+        // get the initial positions of the blocks
+        foreach(string tag in blockTags)
+        {
+            blocks[tag] = GameObject.FindGameObjectWithTag(tag);
+            blockPositions.Add(tag, blocks[tag].transform.position);
+        }
+
         inputReceived = new UnityEvent();
         plansReceived = new UnityEvent();
         noPlan = new UnityEvent();
@@ -37,13 +49,16 @@ public class GameManager : MonoBehaviour
         instantiatedCanvas = Instantiate(canvas);
         instantiatedGetInput = Instantiate(getInput);
     }
-    // TODO: solve how to get from initial setup to initial state first (will need to change some params)...
-    // destroy the canvas and configure the blocks in that position
-    // instantiate the canvas and do the same, now getting the goal
-    // destroy the canvas and configure the blocks in that position
+
     void CallSolver()
     {
         instantiatedSolver = Instantiate(solver);
+        if(instantiatedStateCanvas == null)
+        {
+            instantiatedStateCanvas = Instantiate(stateCanvas);
+        }
+        stateText = GameObject.FindGameObjectWithTag("State of Solving Label").GetComponent<TMPro.TextMeshProUGUI>();
+        stateText.text = "solving...";
     }
 
     void CallExecutePlan()
@@ -51,12 +66,12 @@ public class GameManager : MonoBehaviour
         Destroy(instantiatedCanvas);
         Destroy(instantiatedGetInput);
         instantiatedExecutePlan = Instantiate(executePlan);
-        instantiatedStateCanvas = Instantiate(stateCanvas);
     }
 
     void GetInputAgain()
     {
         GameObject.FindGameObjectWithTag("Initial State Label").GetComponent<TMPro.TextMeshProUGUI>().text = "set initial state";
+        stateText.text = "Couldn't find a plan, please try different parameters.";
         Destroy(instantiatedSolver);
     }
     void TryAgain()
@@ -65,12 +80,54 @@ public class GameManager : MonoBehaviour
         Button btn = GameObject.FindGameObjectWithTag("Redo").GetComponent<Button>();
         btn.onClick.AddListener(TaskOnClick);
     }
+
+    IEnumerator ResetToOriginalPos()
+    {
+        Debug.Log("starting couroutine...");
+        foreach(string tag in blockTags)
+        {
+            Rigidbody rigidBody = blocks[tag].GetComponent<Rigidbody>();
+            rigidBody.useGravity = false;
+        }
+
+        foreach(string tag in blockTags)
+        {
+            Debug.Log("moving block " + tag);
+            blocks[tag].transform.position = blockPositions[tag];
+            yield return new WaitForSeconds(5);
+        }
+
+    }
+   
     void TaskOnClick()
     {
+        Destroy(instantiatedSolver);
         Destroy(instantiateRedoButton);
+        Destroy(instantiatedStateCanvas);
         instantiatedCanvas = Instantiate(canvas);
         instantiatedGetInput = Instantiate(getInput);
-        GetInputAgain();
+        GameObject.FindGameObjectWithTag("Initial State Label").GetComponent<TMPro.TextMeshProUGUI>().text = "set initial state";
+        // reset blocks
+        Debug.Log("calling couroutine...");
+        //StartCoroutine(ResetToOriginalPos());
+        foreach (string tag in blockTags)
+        {
+            Rigidbody rigidBody = blocks[tag].GetComponent<Rigidbody>();
+            rigidBody.useGravity = false;
+        }
+
+        foreach (string tag in blockTags)
+        {
+            Debug.Log("moving block " + tag);
+            blocks[tag].transform.position = blockPositions[tag];
+            //yield return new WaitForSeconds(5);
+        }
+
+        foreach (string tag in blockTags)
+        {
+            Rigidbody rigidBody = blocks[tag].GetComponent<Rigidbody>();
+            rigidBody.useGravity = true;
+        }
     }
 }
  

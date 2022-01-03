@@ -11,16 +11,16 @@ public class MoveBlock : MonoBehaviour
     public static PutDownEvent putDownEvent;
     public float speed;
     private bool stacking = false;
-    //private bool unstacking = false;
     private bool pickingUp = false;
     private bool falling = false;
+    private bool puttingDown = false;
     private GameObject bottomBlock;
     private GameObject topBlock;
-    private float blockHeight;
+    private float blockSize;
+    private float bottomBlockHeight;
+    private float boundary;
     private bool moveRight;
-    private Rigidbody topRigidBody; 
-    private Rigidbody bottomRigidBody;
-
+    private Rigidbody topRigidBody;
 
     public class StackEvent : UnityEvent<string, string>
     {
@@ -45,50 +45,59 @@ public class MoveBlock : MonoBehaviour
         unstackEvent.AddListener(UnstackBlock);
         pickUpEvent.AddListener(PickUpBlock);
         putDownEvent.AddListener(PutDownBlock);
+        blockSize = GameObject.FindGameObjectWithTag("red").GetComponent<MeshCollider>().bounds.extents.y * 2;
     }
     private void StackBlock(string top, string bottom)
     {
-        Debug.Log("stacking " + top + " on " + bottom);
-        stacking = true;
+        GameManager.stateText.text = "stacking " + top + " on " + bottom;
         topBlock = GameObject.FindGameObjectWithTag(top);
         bottomBlock = GameObject.FindGameObjectWithTag(bottom);
-        bottomRigidBody = bottomBlock.GetComponent<Rigidbody>();
-
+        boundary = bottomBlock.transform.position.x;
         moveRight = false;
-        if (topBlock.transform.position.x < bottomBlock.transform.position.x)
+        if (topBlock.transform.position.x < boundary)
         {
             moveRight = true;
         }
+        stacking = true;
     }
 
     private void UnstackBlock(string top, string bottom)
     {
-        Debug.Log("unstacking " + top + " from " + bottom);
+        GameManager.stateText.text = "unstacking " + top + " from " + bottom;
         topBlock = GameObject.FindGameObjectWithTag(top);
         PickUpBlock(top);
         
     }
     private void PickUpBlock(string block)
     {
-        Debug.Log("picking up " + block);
-        pickingUp = true;
+        GameManager.stateText.text = "picking up " + block;
         topBlock = GameObject.FindGameObjectWithTag(block);
-        blockHeight = topBlock.GetComponent<MeshCollider>().bounds.extents.y;
+        
+        bottomBlockHeight = blockSize * 10;
         topRigidBody = topBlock.GetComponent<Rigidbody>();
         topRigidBody.useGravity = false;
+        pickingUp = true;
     }
 
     private void PutDownBlock(string block)
     {
-        Debug.Log("putting down " + block);
-        ExecutePlan.actionFinished.Invoke();
+        GameManager.stateText.text = "putting down " + block;
+        topBlock = GameObject.FindGameObjectWithTag(block);
+        //topBlock.transform.localScale = GameManager.scale;
+        moveRight = false;
+        boundary = GameManager.blockPositions[block].x;
+        if (topBlock.transform.position.x < boundary)
+        {
+            moveRight = true;
+        }
+        puttingDown = true;
     }
 
     private void Update()
     {
         if(pickingUp)
         {
-            if (topBlock.transform.position.y < blockHeight * 10)
+            if (topBlock.transform.position.y < bottomBlockHeight)
             {
                 topBlock.transform.Translate(Vector3.up * speed * Time.deltaTime);
             }
@@ -105,7 +114,7 @@ public class MoveBlock : MonoBehaviour
             {
                 if (moveRight)
                 {
-                    if (topBlock.transform.position.x < bottomBlock.transform.position.x)
+                    if (topBlock.transform.position.x < boundary)
                     {
                         topBlock.transform.Translate(Vector3.right * speed * Time.deltaTime);
                     }
@@ -117,7 +126,7 @@ public class MoveBlock : MonoBehaviour
                 }
                 else
                 {
-                    if (topBlock.transform.position.x > bottomBlock.transform.position.x)
+                    if (topBlock.transform.position.x > boundary)
                     {
                         topBlock.transform.Translate(Vector3.right * speed * Time.deltaTime * -1);
                     }
@@ -135,6 +144,46 @@ public class MoveBlock : MonoBehaviour
                 {
                     falling = false;
                     stacking = false;
+                    ExecutePlan.actionFinished.Invoke();
+                }
+            }
+        }
+        else if(puttingDown)
+        {
+            if (!falling)
+            {
+                if (moveRight)
+                {
+                    if (topBlock.transform.position.x < boundary)
+                    {
+                        topBlock.transform.Translate(Vector3.right * speed * Time.deltaTime);
+                    }
+                    else
+                    {
+                        falling = true;
+                        topRigidBody.useGravity = true;
+                    }
+                }
+                else
+                {
+                    if (topBlock.transform.position.x > boundary)
+                    {
+                        topBlock.transform.Translate(Vector3.right * speed * Time.deltaTime * -1);
+                    }
+                    else
+                    {
+                        falling = true;
+                        topRigidBody.useGravity = true;
+                    }
+                }
+            }
+            else
+            {
+                //if colliding with bottom block
+                if (topBlock.transform.position.y <= 0)
+                {
+                    falling = false;
+                    puttingDown = false;
                     ExecutePlan.actionFinished.Invoke();
                 }
             }

@@ -98,7 +98,6 @@ public class CallSolver : MonoBehaviour
             reader = new StreamReader("Assets/PDDL Files/fullProblem.pddl");
             problem = reader.ReadToEnd();
             fullPlan = await Solve(domain, problem, fullPlan);
-
             GameManager.plansReceived.Invoke();
         }
         catch (System.NullReferenceException)
@@ -110,6 +109,7 @@ public class CallSolver : MonoBehaviour
         {
             reader.Close();
         }
+        reader.Close();
     }
 }
 
