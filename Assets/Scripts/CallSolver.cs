@@ -84,19 +84,22 @@ public class CallSolver : MonoBehaviour
     // Start is called before the first frame update
     async void Start()
     {
-        StreamReader reader = new StreamReader("Assets/PDDL Files/domain.pddl");
+        StreamReader reader = new StreamReader(Application.dataPath + "/PDDL Files/domain.pddl");
         domain = reader.ReadToEnd();
+        reader.Close();
 
         try
         {
             if (!GetInput.basicStart)
             {
-                reader = new StreamReader("Assets/PDDL Files/initialProblem.pddl");
-                problem = reader.ReadToEnd();
+                StreamReader readerInit = new StreamReader(Application.dataPath + "/PDDL Files/initialProblem.pddl");
+                problem = readerInit.ReadToEnd();
+                readerInit.Close();
                 initialPlan = await Solve(domain, problem, initialPlan);
             }
-            reader = new StreamReader("Assets/PDDL Files/fullProblem.pddl");
-            problem = reader.ReadToEnd();
+            StreamReader readerFull = new StreamReader(Application.dataPath + "/PDDL Files/fullProblem.pddl");
+            problem = readerFull.ReadToEnd();
+            readerFull.Close();
             fullPlan = await Solve(domain, problem, fullPlan);
             GameManager.plansReceived.Invoke();
         }
@@ -106,12 +109,7 @@ public class CallSolver : MonoBehaviour
             GetInput.basicStart = false;
             GameManager.noPlan.Invoke();
         }
-        finally
-        {
-            reader.Close();
-        }
         GetInput.btn.interactable = true;
-        reader.Close();
     }
 }
 
