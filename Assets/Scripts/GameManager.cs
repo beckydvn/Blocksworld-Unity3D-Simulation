@@ -26,10 +26,18 @@ public class GameManager : MonoBehaviour
     private string[] blockTags = {"red", "orange", "yellow", "green", "cyan", "blue", "purple", "pink", "white", "black"};
     private Dictionary <string, GameObject> blocks = new Dictionary<string, GameObject>();
     public static TMPro.TextMeshProUGUI stateText;
-   // public static Vector3 scale = new Vector3(1.25f, 1, 1);
 
-    // Start is called before the first frame update
-    void Start()
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            Debug.Log("quitting");
+            Application.Quit();
+        }
+    }
+
+        // Start is called before the first frame update
+        void Start()
     {
         // get the initial positions of the blocks
         foreach(string tag in blockTags)
